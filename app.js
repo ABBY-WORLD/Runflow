@@ -16,6 +16,7 @@ function audioUrl(path) {
 }
 
 const tracks = [
+  { id: "warmup", title: "Gravel Heart Run", file: audioUrl("Music/Gravel Heart Run.mp3"), state: "Warmup / Walk", color: "#f2a14f", bpm: 96, reason: "Movement is still calm, so Runflow stays low and lets the run build slowly." },
   { id: "coastal-reveal", title: "Horizon Run", file: audioUrl("Music/Horizon Run.mp3"), state: "Coastal Reveal", color: "#58c7bc", bpm: 124, reason: "Coastline is close and the route opens toward water." },
   { id: "tidal-surge", title: "Tidal Surge", file: audioUrl("Music/Tidal Surge.mp3"), state: "Near Water", color: "#18a2bd", bpm: 132, reason: "Water is moving into range, so the soundtrack widens." },
   { id: "forest-climb", title: "Switchback Pulse", file: audioUrl("Music/Switchback Pulse.mp3"), state: "Forest Climb", color: "#ff5a3d", bpm: 142, reason: "The route is climbing through cover and needs more push." },
@@ -32,32 +33,37 @@ const tracks = [
 ];
 
 const routeModel = [
-  { at: 0, paceSeconds: 324, grade: 0, seaDistance: 980, forest: 35, finishPush: false },
-  { at: 18, paceSeconds: 312, grade: 1, seaDistance: 900, forest: 58, finishPush: false },
-  { at: 36, paceSeconds: 338, grade: 6, seaDistance: 860, forest: 82, finishPush: false },
-  { at: 58, paceSeconds: 252, grade: 2, seaDistance: 920, forest: 86, finishPush: false },
-  { at: 78, paceSeconds: 276, grade: -6, seaDistance: 1100, forest: 42, finishPush: false },
-  { at: 98, paceSeconds: 304, grade: 0, seaDistance: 520, forest: 26, finishPush: false },
-  { at: 118, paceSeconds: 318, grade: 3, seaDistance: 190, forest: 10, finishPush: false },
-  { at: 140, paceSeconds: 248, grade: 0, seaDistance: 760, forest: 18, finishPush: false },
-  { at: 160, paceSeconds: 236, grade: 1, seaDistance: 880, forest: 20, finishPush: true },
-  { at: 184, paceSeconds: 324, grade: 0, seaDistance: 980, forest: 35, finishPush: false }
+  { at: 0, paceSeconds: 900, grade: 0, seaDistance: 980, forest: 35, finishPush: false },
+  { at: 18, paceSeconds: 720, grade: 0, seaDistance: 960, forest: 38, finishPush: false },
+  { at: 36, paceSeconds: 520, grade: 1, seaDistance: 920, forest: 48, finishPush: false },
+  { at: 58, paceSeconds: 324, grade: 0, seaDistance: 900, forest: 58, finishPush: false },
+  { at: 80, paceSeconds: 338, grade: 6, seaDistance: 860, forest: 82, finishPush: false },
+  { at: 102, paceSeconds: 252, grade: 2, seaDistance: 920, forest: 86, finishPush: false },
+  { at: 122, paceSeconds: 276, grade: -6, seaDistance: 1100, forest: 42, finishPush: false },
+  { at: 142, paceSeconds: 304, grade: 0, seaDistance: 520, forest: 26, finishPush: false },
+  { at: 162, paceSeconds: 318, grade: 3, seaDistance: 190, forest: 10, finishPush: false },
+  { at: 184, paceSeconds: 248, grade: 0, seaDistance: 760, forest: 18, finishPush: false },
+  { at: 204, paceSeconds: 236, grade: 1, seaDistance: 880, forest: 20, finishPush: true },
+  { at: 230, paceSeconds: 900, grade: 0, seaDistance: 980, forest: 35, finishPush: false }
 ];
 
 const state = {
-  activeTrack: tracks.find((track) => track.id === "flow"),
+  activeTrack: tracks.find((track) => track.id === "warmup"),
   activeDeck: "A",
   isPlaying: false,
   liveGps: false,
   elapsedSeconds: 0,
   distanceKm: 0,
   context: {
-    paceSeconds: 324,
+    paceSeconds: 900,
     grade: 0,
     seaDistance: 980,
     forest: 35,
-    speed: 3.09,
+    speed: 0,
     altitude: null,
+    latitude: null,
+    longitude: null,
+    accuracy: null,
     finishPush: false
   }
 };
@@ -82,7 +88,12 @@ const readouts = {
   effort: document.querySelector("#effortReadout"),
   terrain: document.querySelector("#terrainReadout"),
   coast: document.querySelector("#coastReadout"),
-  forest: document.querySelector("#forestReadout")
+  forest: document.querySelector("#forestReadout"),
+  gpsStatus: document.querySelector("#gpsStatusReadout"),
+  speed: document.querySelector("#speedReadout"),
+  altitude: document.querySelector("#altitudeReadout"),
+  accuracy: document.querySelector("#accuracyReadout"),
+  coords: document.querySelector("#coordsReadout")
 };
 
 let gpsWatchId = null;
@@ -101,45 +112,96 @@ const renderer = new THREE.WebGLRenderer({
   preserveDrawingBuffer: true
 });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setClearColor(0x050506, 1);
+renderer.setClearColor(0x000000, 1);
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-camera.position.set(0, 0, 6.2);
+camera.position.set(0, 0, 10.8);
 
-const blobGeometry = new THREE.IcosahedronGeometry(1.72, 56);
+const blobGeometry = new THREE.IcosahedronGeometry(2.58, 56);
 const basePositions = blobGeometry.attributes.position.array.slice();
-const blobMaterial = new THREE.MeshPhysicalMaterial({
-  color: new THREE.Color(state.activeTrack.color),
-  roughness: 0.36,
-  metalness: 0.12,
-  clearcoat: 0.82,
-  clearcoatRoughness: 0.22,
-  emissive: new THREE.Color(state.activeTrack.color),
-  emissiveIntensity: 0.42
+const blobMaterial = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime: { value: 0 },
+    uEnergy: { value: 0 },
+    uBass: { value: 0 },
+    uMid: { value: 0 },
+    uHigh: { value: 0 }
+  },
+  vertexShader: `
+    varying vec3 vNormalView;
+    varying vec3 vPosition;
+
+    void main() {
+      vPosition = position;
+      vNormalView = normalize(normalMatrix * normal);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    precision highp float;
+
+    uniform float uTime;
+    uniform float uEnergy;
+    uniform float uBass;
+    uniform float uMid;
+    uniform float uHigh;
+
+    varying vec3 vNormalView;
+    varying vec3 vPosition;
+
+    float softBand(float value, float center, float width) {
+      return 1.0 - smoothstep(0.0, width, abs(value - center));
+    }
+
+    void main() {
+      vec3 n = normalize(vNormalView);
+      float x = n.x;
+      float y = n.y;
+
+      vec3 yellow = vec3(1.0, 0.78, 0.20);
+      vec3 orange = vec3(1.0, 0.43, 0.13);
+      vec3 red = vec3(1.0, 0.12, 0.15);
+      vec3 pink = vec3(1.0, 0.10, 0.72);
+      vec3 violet = vec3(0.57, 0.10, 1.0);
+      vec3 blue = vec3(0.08, 0.18, 1.0);
+
+      float rightSide = smoothstep(-0.18, 0.88, x);
+      vec3 color = mix(red, blue, rightSide);
+
+      float upperLeft = smoothstep(0.0, 0.92, y) * (1.0 - smoothstep(-0.52, 0.30, x));
+      float lowerLeft = (1.0 - smoothstep(-0.90, -0.18, x)) * (1.0 - smoothstep(-0.72, 0.24, y));
+      float centerRibbon = softBand(x + y * 0.32 + sin(y * 3.4 + uTime * 0.24) * 0.10, 0.08, 0.46);
+      float lowerRight = smoothstep(-0.78, -0.08, y) * smoothstep(-0.12, 0.72, x);
+
+      color = mix(color, orange, lowerLeft * 0.72);
+      color = mix(color, yellow, upperLeft * 0.88);
+      color = mix(color, pink, centerRibbon * (0.62 + uMid * 0.18));
+      color = mix(color, violet, lowerRight * 0.56);
+
+      float satin = pow(max(dot(n, normalize(vec3(-0.72, 0.66, 0.54))), 0.0), 2.4);
+      float rim = pow(1.0 - max(n.z, 0.0), 2.0);
+      float pulse = sin(uTime * (0.65 + uBass * 0.7) + x * 3.0 - y * 1.8) * 0.5 + 0.5;
+
+      color += yellow * satin * (0.22 + uHigh * 0.18);
+      color = mix(color, color * 0.78 + blue * 0.22, rim * 0.24);
+      color += vec3(0.12, 0.04, 0.18) * uEnergy + pink * pulse * uEnergy * 0.08;
+
+      gl_FragColor = vec4(color, 1.0);
+    }
+  `
 });
 const blob = new THREE.Mesh(blobGeometry, blobMaterial);
 scene.add(blob);
 
-const wire = new THREE.Mesh(
-  blobGeometry,
-  new THREE.MeshBasicMaterial({
-    color: 0xffffff,
-    transparent: true,
-    opacity: 0.08,
-    wireframe: true
-  })
-);
-scene.add(wire);
-
-scene.add(new THREE.AmbientLight(0xffffff, 1.6));
+scene.add(new THREE.AmbientLight(0xbfdcff, 0.92));
 const keyLight = new THREE.PointLight(0xffffff, 9, 16);
-keyLight.position.set(2.8, 2.2, 4.5);
+keyLight.position.set(2.2, 2.1, 5.8);
 scene.add(keyLight);
-const rimLight = new THREE.PointLight(0xc9ff2e, 6, 14);
+const rimLight = new THREE.PointLight(0xff4c39, 6, 14);
 rimLight.position.set(-3.2, -1.4, 3);
 scene.add(rimLight);
-const fillLight = new THREE.PointLight(0xd7ff2f, 4, 18);
+const fillLight = new THREE.PointLight(0x9fe8ff, 5, 18);
 fillLight.position.set(0, -3.4, 4);
 scene.add(fillLight);
 
@@ -160,6 +222,10 @@ function formatTime(seconds) {
 
 function metersLabel(value) {
   return value >= 1000 ? `${(value / 1000).toFixed(1)} km` : `${Math.round(value)} m`;
+}
+
+function numberLabel(value, suffix = "", digits = 0) {
+  return Number.isFinite(value) ? `${value.toFixed(digits)}${suffix}` : "--";
 }
 
 function interpolate(a, b, progress) {
@@ -184,6 +250,7 @@ function getRouteFrame(seconds) {
 }
 
 function pickTrack(context) {
+  if (context.speed < 2.05 || context.paceSeconds >= 488) return tracks.find((track) => track.id === "warmup");
   if (context.finishPush) return tracks.find((track) => track.id === "finish");
   if (context.seaDistance <= 180 && context.grade >= 3) return tracks.find((track) => track.id === "summit");
   if (context.seaDistance <= 260) return tracks.find((track) => track.id === "coastal-reveal");
@@ -200,6 +267,8 @@ function pickTrack(context) {
 }
 
 function effortLabel(context) {
+  if (context.speed < 0.45) return "Still";
+  if (context.speed < 2.05 || context.paceSeconds >= 488) return "Walking";
   if (context.finishPush) return "Final push";
   if (context.grade >= 7) return "Climbing";
   if (context.grade <= -4) return "Release";
@@ -208,6 +277,7 @@ function effortLabel(context) {
 }
 
 function terrainLabel(context) {
+  if (context.speed < 2.05 || context.paceSeconds >= 488) return "Warmup";
   if (context.seaDistance <= 260) return "Open water";
   if (context.forest >= 72 && context.grade >= 4) return "Switchback";
   if (context.forest >= 72) return "Deep trail";
@@ -222,12 +292,20 @@ function updateMetrics() {
   readouts.time.textContent = formatTime(state.elapsedSeconds);
   readouts.grade.textContent = `${state.context.grade}%`;
   readouts.distance.textContent = state.distanceKm.toFixed(2);
-  readouts.detectorStatus.textContent = state.liveGps ? "Live GPS + auto terrain" : "Auto route intelligence";
+  readouts.detectorStatus.textContent = state.liveGps ? "iPhone GPS + modeled place cues" : "Demo route intelligence";
   readouts.upcomingTrack.textContent = state.activeTrack.title;
   readouts.effort.textContent = effortLabel(state.context);
   readouts.terrain.textContent = terrainLabel(state.context);
   readouts.coast.textContent = metersLabel(state.context.seaDistance);
   readouts.forest.textContent = `${state.context.forest}%`;
+  const hasLivePosition = state.liveGps && Number.isFinite(state.context.latitude) && Number.isFinite(state.context.longitude);
+  readouts.gpsStatus.textContent = hasLivePosition ? "Receiving live data" : state.liveGps ? "Waiting for GPS fix" : "Tap GPS to enable";
+  readouts.speed.textContent = hasLivePosition ? numberLabel(state.context.speed * 3.6, " km/h", 1) : "--";
+  readouts.altitude.textContent = hasLivePosition ? numberLabel(state.context.altitude, " m") : "--";
+  readouts.accuracy.textContent = hasLivePosition ? numberLabel(state.context.accuracy, " m") : "--";
+  readouts.coords.textContent = hasLivePosition
+    ? `${state.context.latitude.toFixed(4)}, ${state.context.longitude.toFixed(4)}`
+    : "--";
 }
 
 function getDecks() {
@@ -297,9 +375,6 @@ function renderNowPlaying() {
   stateLabel.textContent = state.activeTrack.state;
   stateReason.textContent = state.activeTrack.reason;
   document.documentElement.style.setProperty("--accent-2", state.activeTrack.color);
-  blobMaterial.color.set(state.activeTrack.color);
-  blobMaterial.emissive.set(state.activeTrack.color);
-  rimLight.color.set(state.activeTrack.color);
   readouts.bpm.textContent = state.activeTrack.bpm;
 }
 
@@ -307,12 +382,13 @@ function applyAutoContext() {
   const modeled = getRouteFrame(state.elapsedSeconds);
   const paceSeconds = state.liveGps ? state.context.paceSeconds : modeled.paceSeconds;
   const grade = state.liveGps ? state.context.grade : modeled.grade;
+  const speed = state.liveGps ? state.context.speed : 1000 / paceSeconds;
   state.context = {
     ...state.context,
     ...modeled,
     paceSeconds,
     grade,
-    speed: 1000 / paceSeconds
+    speed
   };
   setTrack(pickTrack(state.context));
   updateMetrics();
@@ -349,7 +425,7 @@ function startRunTimer() {
   if (runTimer) return;
   runTimer = window.setInterval(() => {
     state.elapsedSeconds += 1;
-    state.distanceKm += 1000 / state.context.paceSeconds / 3600;
+    state.distanceKm += Math.max(0, state.context.speed) / 1000;
     applyAutoContext();
   }, 1000);
 }
@@ -383,8 +459,13 @@ function startGps() {
       latitude: position.coords.latitude,
       longitude: position.coords.longitude,
       altitude: position.coords.altitude,
+      accuracy: position.coords.accuracy,
       timestamp: position.timestamp
     };
+
+    state.context.latitude = point.latitude;
+    state.context.longitude = point.longitude;
+    state.context.accuracy = point.accuracy;
 
     if (position.coords.speed && position.coords.speed > 0) {
       state.context.speed = position.coords.speed;
@@ -395,7 +476,13 @@ function startGps() {
       if (seconds > 0 && distance > 1) {
         state.context.speed = distance / seconds;
         state.context.paceSeconds = Math.round(1000 / state.context.speed);
+      } else if (seconds > 0) {
+        state.context.speed = 0;
+        state.context.paceSeconds = 900;
       }
+    } else {
+      state.context.speed = 0;
+      state.context.paceSeconds = 900;
     }
 
     if (point.altitude !== null && lastGpsPoint?.altitude !== null) {
@@ -405,9 +492,14 @@ function startGps() {
       state.context.altitude = point.altitude;
     }
 
+    if (point.altitude !== null) {
+      state.context.altitude = point.altitude;
+    }
+
     lastGpsPoint = point;
     applyAutoContext();
   }, () => {
+    readouts.gpsStatus.textContent = "GPS unavailable";
     stopGps();
   }, {
     enableHighAccuracy: true,
@@ -479,14 +571,16 @@ function animateBlob(now = 0) {
     const ny = y / length;
     const nz = z / length;
 
-    const ripple =
-      Math.sin(nx * 5.4 + time * (1.6 + bands.high * 2.2)) * 0.08 +
-      Math.cos(ny * 6.7 + time * (1.1 + bands.mid * 1.4)) * 0.1 +
-      Math.sin((nx + ny + nz) * 4.2 + time * (2.2 + bands.bass * 2.6)) * 0.12;
+    const organicCurve =
+      Math.sin(nx * 2.1 + time * (0.52 + bands.high * 0.8)) * 0.08 +
+      Math.cos(ny * 2.7 - nx * 1.4 + time * (0.42 + bands.mid * 0.7)) * 0.07 +
+      Math.sin((nx - ny + nz) * 2.2 + time * (0.72 + bands.bass * 0.9)) * 0.08;
 
-    const audioDisplacement = bands.bass * 0.34 + bands.mid * 0.22 + bands.high * 0.16;
+    const audioDisplacement = bands.bass * 0.2 + bands.mid * 0.13 + bands.high * 0.08;
     const runDisplacement = gradePush * 0.12 + pacePush * 0.08;
-    const radius = 1 + ripple + audioDisplacement + runDisplacement;
+    const topLift = Math.max(0, ny) * 0.08;
+    const sideBulge = Math.max(0, nx) * 0.1 + Math.max(0, -nx) * Math.max(0, -ny) * 0.12;
+    const radius = 1 + organicCurve + topLift + sideBulge + audioDisplacement + runDisplacement;
     positions[i] = nx * length * radius;
     positions[i + 1] = ny * length * radius;
     positions[i + 2] = nz * length * radius;
@@ -496,10 +590,12 @@ function animateBlob(now = 0) {
   blobGeometry.computeVertexNormals();
   blob.rotation.y += 0.0038 + bands.energy * 0.01;
   blob.rotation.x = Math.sin(time * 0.55) * 0.12;
-  wire.rotation.copy(blob.rotation);
-  blob.scale.setScalar(1.08 + bands.energy * 0.1);
-  wire.scale.copy(blob.scale);
-  blobMaterial.emissiveIntensity = 0.38 + bands.energy * 0.72;
+  blob.scale.setScalar(0.8 + bands.energy * 0.07);
+  blobMaterial.uniforms.uTime.value = time;
+  blobMaterial.uniforms.uEnergy.value = bands.energy;
+  blobMaterial.uniforms.uBass.value = bands.bass;
+  blobMaterial.uniforms.uMid.value = bands.mid;
+  blobMaterial.uniforms.uHigh.value = bands.high;
   keyLight.intensity = 7 + bands.bass * 12;
   rimLight.intensity = 4 + bands.high * 10;
   fillLight.intensity = 3 + bands.mid * 8;
