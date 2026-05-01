@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Runflow</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="run-stage" aria-label="Runflow running mode">
+        <canvas id="blobCanvas" class="blob-canvas" aria-label="Audio reactive music visualizer"></canvas>
+
+        <div class="topbar">
+          <div>
+            <p class="eyebrow">Soundtrack of Our Runs</p>
+            <h1>Runflow</h1>
+          </div>
+          <button class="icon-button" id="gpsButton" type="button" title="Use live GPS">
+            <span aria-hidden="true">◎</span>
+            <span class="sr-only">Use live GPS</span>
+          </button>
+        </div>
+
+        <div class="run-readout" aria-label="Current run">
+          <div>
+            <span id="distanceReadout">0.00</span>
+            <small>Kilometres</small>
+          </div>
+          <button class="primary-button" id="playButton" type="button">Start</button>
+        </div>
+
+        <div class="now-playing" aria-live="polite">
+          <p class="state-label" id="stateLabel">Ready</p>
+          <h2 id="trackTitle">Orbit Run</h2>
+          <p id="stateReason">Start the run. Runflow will listen to movement and place, then direct the soundtrack automatically.</p>
+        </div>
+
+        <div class="metrics-grid" aria-label="Run metrics">
+          <div>
+            <span>Avg. Pace</span>
+            <strong id="paceReadout">5'20"</strong>
+          </div>
+          <div>
+            <span>BPM</span>
+            <strong id="bpmReadout">124</strong>
+          </div>
+          <div>
+            <span>Time</span>
+            <strong id="timeReadout">0:00</strong>
+          </div>
+          <div>
+            <span>Grade</span>
+            <strong id="gradeReadout">0%</strong>
+          </div>
+        </div>
+
+        <section class="detector-panel" aria-label="Automatic run state detection">
+          <div class="detector-header">
+            <span id="detectorStatus">Auto director ready</span>
+            <strong id="upcomingTrack">Listening for first cue</strong>
+          </div>
+          <div class="signal-grid">
+            <div>
+              <span>Effort</span>
+              <strong id="effortReadout">Settling</strong>
+            </div>
+            <div>
+              <span>Terrain</span>
+              <strong id="terrainReadout">Flow</strong>
+            </div>
+            <div>
+              <span>Coast</span>
+              <strong id="coastReadout">900 m</strong>
+            </div>
+            <div>
+              <span>Canopy</span>
+              <strong id="forestReadout">45%</strong>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <audio id="deckA" preload="metadata"></audio>
+    <audio id="deckB" preload="metadata"></audio>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
