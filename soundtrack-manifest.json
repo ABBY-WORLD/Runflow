@@ -1,0 +1,93 @@
+[
+  {
+    "id": "coastal-reveal",
+    "title": "Horizon Run",
+    "file": "Music/Horizon Run.mp3",
+    "state": "Coastal Reveal",
+    "use": "First sight of sea, horizon, open view, emotional arrival"
+  },
+  {
+    "id": "near-water",
+    "title": "Tidal Surge",
+    "file": "Music/Tidal Surge.mp3",
+    "state": "Near Water",
+    "use": "Coastline, lake, river, exposed waterline running"
+  },
+  {
+    "id": "forest-climb",
+    "title": "Switchback Pulse",
+    "file": "Music/Switchback Pulse.mp3",
+    "state": "Forest Climb",
+    "use": "Uphill trail, switchbacks, dense forest effort"
+  },
+  {
+    "id": "dense-forest",
+    "title": "Black Pine Circuit",
+    "file": "Music/Black Pine Circuit.mp3",
+    "state": "Deep Forest",
+    "use": "Dark forest, steady focus, enclosed trail"
+  },
+  {
+    "id": "technical-sprint",
+    "title": "Mossline Sprint",
+    "file": "Music/Mossline Sprint.mp3",
+    "state": "Technical Sprint",
+    "use": "Fast technical trail through dense forest"
+  },
+  {
+    "id": "downhill-release",
+    "title": "Downhill Breeze Run",
+    "file": "Music/Downhill Breeze Run.mp3",
+    "state": "Downhill Release",
+    "use": "Downhill sections, gravity, lighter stride"
+  },
+  {
+    "id": "summit-view",
+    "title": "Summit Over Glacier",
+    "file": "Music/Summit Over Glacier.mp3",
+    "state": "Summit View",
+    "use": "Viewpoint, summit, high open landscape"
+  },
+  {
+    "id": "high-effort",
+    "title": "Summit Pulse",
+    "file": "Music/Summit Pulse.mp3",
+    "state": "High Effort",
+    "use": "Sustained climb, heavy effort, heroic push"
+  },
+  {
+    "id": "gravel-flow",
+    "title": "Gravel Heart Run",
+    "file": "Music/Gravel Heart Run.mp3",
+    "state": "Gravel Flow",
+    "use": "Steady gravel, road, grounded rhythm"
+  },
+  {
+    "id": "urban-pace",
+    "title": "Neon Pace Run",
+    "file": "Music/Neon Pace Run.mp3",
+    "state": "Urban Pace",
+    "use": "Flat fast asphalt, city, high cadence"
+  },
+  {
+    "id": "flow-state",
+    "title": "Orbit Run",
+    "file": "Music/Orbit Run.mp3",
+    "state": "Flow State",
+    "use": "Balanced mid-run flow, default groove"
+  },
+  {
+    "id": "trail-cruise",
+    "title": "Cedar Trail Run",
+    "file": "Music/Cedar Trail Run.mp3",
+    "state": "Trail Cruise",
+    "use": "Relaxed trail movement, moderate forest"
+  },
+  {
+    "id": "final-push",
+    "title": "Finish Line Riot",
+    "file": "Music/Finish Line Riot.mp3",
+    "state": "Final Push",
+    "use": "Last kilometer, manual boost, finish cue"
+  }
+]
