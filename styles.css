@@ -24,8 +24,7 @@ body {
 
 body {
   margin: 0;
-  background:
-    linear-gradient(90deg, #0b0b0d, #050506 24%, #050506 76%, #0b0b0d);
+  background: #000;
   color: var(--ink);
 }
 
@@ -51,7 +50,7 @@ button {
   width: min(100%, 430px);
   min-height: 100svh;
   margin: 0 auto;
-  background: #050506;
+  background: #000;
 }
 
 .run-stage {
@@ -61,19 +60,14 @@ button {
   min-height: 100svh;
   padding: max(18px, env(safe-area-inset-top)) 16px max(18px, env(safe-area-inset-bottom));
   overflow: hidden;
-  background:
-    linear-gradient(180deg, rgba(5, 5, 6, 0.02), rgba(5, 5, 6, 0.88)),
-    linear-gradient(135deg, #101712 0%, #050506 48%, #151519 100%);
+  background: #000;
 }
 
 .run-stage::before {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(90deg, rgba(215, 255, 47, 0.1), transparent 28%, rgba(111, 131, 255, 0.12) 74%, transparent),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.032) 0, rgba(255, 255, 255, 0.032) 1px, transparent 1px, transparent 72px);
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.95), transparent 78%);
+  background: radial-gradient(circle at 50% 44%, rgba(56, 168, 255, 0.08), transparent 34%);
   pointer-events: none;
 }
 
@@ -269,6 +263,10 @@ h1 {
   padding: 12px;
 }
 
+.sensor-panel {
+  margin-top: 8px;
+}
+
 .detector-header {
   display: flex;
   align-items: flex-start;
@@ -292,6 +290,11 @@ h1 {
   font-size: 0.96rem;
   font-weight: 900;
   line-height: 1.15;
+}
+
+.sensor-grid strong {
+  overflow-wrap: anywhere;
+  font-size: 0.86rem;
 }
 
 @media (min-width: 760px) {
